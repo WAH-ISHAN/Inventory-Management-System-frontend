@@ -18,10 +18,12 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const res = await api.post('/login', values);
-      if (res.data.token) {
-        Cookies.set('token', res.data.token, { expires: 7 });
+      const token = res.data.token || res.data.access_token;
+      
+      if (token) {
+        Cookies.set('token', token, { expires: 7 });
         Cookies.set('email', values.email, { expires: 7 });
-        const userRole = res.data.user?.role || 'Admin';
+        const userRole = res.data.user?.role || 'staff';
         Cookies.set('role', userRole, { expires: 7 });
         toast.success('Login successful! Redirecting...');
         router.push('/');
