@@ -1,17 +1,20 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Typography, Button, Table, Tag, Input, Space, Modal, Form, Select, InputNumber, Popconfirm } from 'antd';
-import { PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined, AppstoreOutlined } from '@ant-design/icons';
-import AdminLayout from '../components/AdminLayout'; 
+import { Button, Table, Tag, Input, Modal, Form, Select, InputNumber, Popconfirm } from 'antd';
+import {
+  PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined,
+  AppstoreOutlined, FilterOutlined, ReloadOutlined,
+} from '@ant-design/icons';
+import AdminLayout from '../components/AdminLayout';
 import toast from 'react-hot-toast';
-import api from '../lib/axios'; // ⚠️ සැබෑ API එක
+import api from '../lib/axios';
 
-const { Title, Text } = Typography;
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export default function InventoryPage() {
   const [items, setItems] = useState<any[]>([]);
-  const [places, setPlaces] = useState<any[]>([]); 
+  const [places, setPlaces] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
@@ -22,275 +25,355 @@ export default function InventoryPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-
-      const [itemsRes, placesRes] = await Promise.all([
-        api.get('/items'),
-        api.get('/places')
-
-      ]);
-
+      const [itemsRes, placesRes] = await Promise.all([api.get('/items'), api.get('/places')]);
       setItems(itemsRes.data);
       setPlaces(placesRes.data);
-
-    } catch (error) {
-
-      toast.error("Failed to load inventory data");
-      console.error("Failed to load inventory data");
-
+    } catch {
+      toast.error('Failed to load inventory data');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const handleAddSubmit = async (values: any) => {
-
     setSubmitLoading(true);
     try {
-
       await api.post('/items', values);
-      toast.success('Item added successfully!'); 
-      setIsModalOpen(false); 
-      form.resetFields(); 
-      fetchData(); 
-
-    } catch (error) {
-
-        toast.error("Failed to add item");
-      console.error("Failed to add item");
-
+      toast.success('Item added successfully!');
+      setIsModalOpen(false);
+      form.resetFields();
+      fetchData();
+    } catch {
+      toast.error('Failed to add item');
     } finally {
       setSubmitLoading(false);
     }
   };
+
   const handleDelete = async (id: number) => {
     try {
       await api.delete(`/items/${id}`);
-
       toast.success('Item deleted successfully!');
-
       fetchData();
-    } catch (error) {
-
-      toast.error("Failed to delete item");
-      console.error("Failed to delete item");
+    } catch {
+      toast.error('Failed to delete item');
     }
   };
 
   const filteredItems = items.filter(item => {
-
-    const matchesSearch = item.name?.toLowerCase().includes(searchText.toLowerCase()) || item.code?.toLowerCase().includes(searchText.toLowerCase());
+    const matchesSearch =
+      item.name?.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.code?.toLowerCase().includes(searchText.toLowerCase());
     const matchesStatus = filterStatus === 'All' || item.status === filterStatus;
-
     return matchesSearch && matchesStatus;
-
   });
+
+  const getStatusStyle = (status: string) => {
+    if (status === 'In-Store') return { color: '#34d399', bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.3)' };
+    if (status === 'Borrowed')  return { color: '#fbbf24', bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.3)' };
+    return { color: '#f87171', bg: 'rgba(244,63,94,0.15)', border: 'rgba(244,63,94,0.3)' };
+  };
+
   const columns = [
-    { 
-      title: 'Item Code', 
-      dataIndex: 'code', 
-      key: 'code', 
-      render: (text: string) => <Text strong>{text}</Text> 
+    {
+      title: 'Item Code',
+      dataIndex: 'code',
+      key: 'code',
+      render: (text: string) => (
+        <span style={{
+          fontFamily: 'monospace',
+          color: '#a5b4fc',
+          background: 'rgba(99,102,241,0.12)',
+          padding: '3px 10px',
+          borderRadius: 6,
+          fontSize: 12,
+          fontWeight: 700,
+        }}>
+          {text}
+        </span>
+      ),
     },
-    { title: 'Item Name', dataIndex: 'name', key: 'name' },
-    { 
-      title: 'Quantity', 
-      dataIndex: 'quantity', 
+    {
+      title: 'Item Name',
+      dataIndex: 'name',
+      key: 'name',
+      render: (text: string) => (
+        <span style={{ fontWeight: 600, color: '#e2e8f0' }}>{text}</span>
+      ),
+    },
+    {
+      title: 'Quantity',
+      dataIndex: 'quantity',
       key: 'quantity',
       render: (qty: number) => (
-        <span className={qty <= 5 ? "text-red-500 font-bold" : "text-gray-700"}>
-          {qty} {qty <= 5 && " (Low)"}
+        <span style={{
+          fontWeight: 700,
+          color: qty <= 5 ? '#f87171' : '#94a3b8',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4,
+        }}>
+          {qty}
+          {qty <= 5 && (
+            <span style={{
+              fontSize: 10,
+              color: '#f43f5e',
+              background: 'rgba(244,63,94,0.15)',
+              padding: '1px 6px',
+              borderRadius: 99,
+              fontWeight: 600,
+              letterSpacing: '0.06em',
+            }}>
+              LOW
+            </span>
+          )}
         </span>
-      )
+      ),
     },
-    { 
-      title: 'Storage Place', 
-      dataIndex: 'place_id', 
+    {
+      title: 'Storage Place',
+      dataIndex: 'place_id',
       key: 'place_id',
       render: (place_id: number) => {
-
         const place = places.find(p => p.id === place_id);
-        return <Tag color="purple">{place ? place.name : `PLC-${place_id}`}</Tag>;
-
-      }
-    },
-    {
-
-      title: 'Status',
-      key: 'status',
-      dataIndex: 'status',
-      render: (status: string) => {
-        let color = status === 'In-Store' ? 'success' : status === 'Borrowed' ? 'warning' : 'error';
-        return <Tag color={color} className="rounded-full px-3">{status?.toUpperCase()}</Tag>;
-
+        return (
+          <span style={{
+            color: '#c4b5fd',
+            background: 'rgba(139,92,246,0.12)',
+            padding: '3px 10px',
+            borderRadius: 6,
+            fontSize: 12,
+            fontWeight: 600,
+          }}>
+            {place ? place.name : `PLC-${place_id}`}
+          </span>
+        );
       },
-
     },
-
     {
-
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string) => {
+        const s = getStatusStyle(status);
+        return (
+          <span style={{
+            color: s.color,
+            background: s.bg,
+            border: `1px solid ${s.border}`,
+            padding: '4px 12px',
+            borderRadius: 99,
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: '0.06em',
+          }}>
+            {status?.toUpperCase()}
+          </span>
+        );
+      },
+    },
+    {
       title: 'Actions',
       key: 'action',
       render: (_: any, record: any) => (
-
-        <Space size="middle">
-
-          <Button type="text" icon={<EditOutlined />} className="text-blue-500 hover:text-blue-700" />
-          
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button
+            style={{
+              background: 'rgba(99,102,241,0.1)',
+              border: '1px solid rgba(99,102,241,0.2)',
+              borderRadius: 8,
+              padding: '6px 10px',
+              color: '#a5b4fc',
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+            }}
+          >
+            <EditOutlined />
+          </button>
           <Popconfirm
-            title="Delete the item"
-            description={`Are you sure you want to delete ${record.name}?`}
-            onConfirm={() => handleDelete(record.id)} 
-            okText="Yes, Delete"
-            cancelText="No"
+            title="Delete this item?"
+            description={`Are you sure you want to delete "${record.name}"?`}
+            onConfirm={() => handleDelete(record.id)}
+            okText="Delete"
+            cancelText="Cancel"
             okButtonProps={{ danger: true }}
           >
-
-            <Button type="text" icon={<DeleteOutlined />} className="text-red-500 hover:text-red-700" />
-
+            <button
+              style={{
+                background: 'rgba(244,63,94,0.1)',
+                border: '1px solid rgba(244,63,94,0.2)',
+                borderRadius: 8,
+                padding: '6px 10px',
+                color: '#f87171',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+              }}
+            >
+              <DeleteOutlined />
+            </button>
           </Popconfirm>
-        </Space>
+        </div>
       ),
     },
   ];
 
   return (
     <AdminLayout>
-      
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-blue-100 rounded-lg">
-
-            <AppstoreOutlined className="text-blue-600 text-xl" />
-
+      {/* ── Page Header ── */}
+      <div className="animate-fade-in-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{
+            width: 48,
+            height: 48,
+            borderRadius: 14,
+            background: 'linear-gradient(135deg, rgba(99,102,241,0.3), rgba(79,70,229,0.15))',
+            border: '1px solid rgba(99,102,241,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <AppstoreOutlined style={{ fontSize: 22, color: '#a5b4fc' }} />
           </div>
           <div>
-
-            <Title level={3} style={{ margin: 0 }}>Inventory Management</Title>
-            <Text type="secondary">Manage hardware assets, quantities, and their locations.</Text>
+            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.02em' }}>
+              Inventory Management
+            </h2>
+            <p style={{ margin: 0, color: '#64748b', fontSize: 13 }}>
+              Manage hardware assets, quantities, and their locations.
+            </p>
           </div>
-
         </div>
-
-        <Button 
-          type="primary" 
-          icon={<PlusOutlined />} 
-          size="large"
-          className="bg-blue-600 rounded-lg"
-          onClick={() => setIsModalOpen(true)}
-        >
-          Add New Item
-        </Button>
-
+        <div style={{ display: 'flex', gap: 10 }}>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={fetchData}
+            style={{
+              background: 'rgba(99,102,241,0.08)',
+              border: '1px solid rgba(99,102,241,0.2)',
+              borderRadius: 10,
+              color: '#94a3b8',
+              fontWeight: 600,
+              height: 40,
+            }}
+          />
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            size="large"
+            className="btn-gradient"
+            onClick={() => setIsModalOpen(true)}
+            style={{ borderRadius: 10, height: 40, fontWeight: 700 }}
+          >
+            Add New Item
+          </Button>
+        </div>
       </div>
 
-      <div className="mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex gap-4">
-
-        <Input 
-
-          size="large" 
-          placeholder="Search by Item Name or Code..." 
-          prefix={<SearchOutlined className="text-gray-400" />} 
-          className="max-w-md rounded-lg"
+      {/* ── Filters Bar ── */}
+      <div
+        className="glass-card animate-fade-in-up delay-100"
+        style={{ padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}
+      >
+        <FilterOutlined style={{ color: '#6366f1', fontSize: 16 }} />
+        <Input
+          placeholder="Search by item name or code..."
+          prefix={<SearchOutlined style={{ color: '#475569' }} />}
           value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
+          onChange={e => setSearchText(e.target.value)}
+          style={{ maxWidth: 340, height: 38 }}
         />
-
-
-        <Select 
-          size="large" 
-          value={filterStatus} 
-          onChange={(val) => setFilterStatus(val)} 
-          className="w-40" 
+        <Select
+          value={filterStatus}
+          onChange={val => setFilterStatus(val)}
+          style={{ width: 160, height: 38 }}
           options={[
-            { value: 'All', label: 'All Status' },
-            { value: 'In-Store', label: 'In-Store' },
-            { value: 'Borrowed', label: 'Borrowed' },
-            { value: 'Damaged', label: 'Damaged' },
-          ]} 
-
+            { value: 'All', label: 'All Statuses' },
+            { value: 'In-Store', label: '✓ In-Store' },
+            { value: 'Borrowed', label: '↗ Borrowed' },
+            { value: 'Damaged', label: '⚠ Damaged' },
+          ]}
         />
-
+        <span style={{ marginLeft: 'auto', fontSize: 12, color: '#475569', fontWeight: 500 }}>
+          {filteredItems.length} item{filteredItems.length !== 1 ? 's' : ''} found
+        </span>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <Table 
-          columns={columns} 
-          dataSource={filteredItems} 
+      {/* ── Table ── */}
+      <div className="dark-table-container animate-fade-in-up delay-200">
+        <Table
+          columns={columns}
+          dataSource={filteredItems}
           loading={loading}
-          rowKey="id" 
-          pagination={{ pageSize: 8 }}
+          rowKey="id"
+          pagination={{
+            pageSize: 8,
+            style: { padding: '12px 20px' },
+          }}
         />
       </div>
 
-
+      {/* ── Add Item Modal ── */}
       <Modal
-        title={<Title level={4}>Add New Item</Title>}
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: 4 }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 8,
+              background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <PlusOutlined style={{ color: 'white', fontSize: 14 }} />
+            </div>
+            <span style={{ fontWeight: 700, fontSize: 16, color: '#f1f5f9' }}>Add New Item</span>
+          </div>
+        }
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
-        destroyOnClose
+        destroyOnHidden
+        width={560}
       >
-
-
-        <Form layout="vertical" form={form} onFinish={handleAddSubmit} className="mt-4">
-          <div className="flex gap-4">
-            <Form.Item name="code" label="Item Code" className="w-1/3" rules={[{ required: true, message: 'Required!' }]}>
-              <Input placeholder="ITM-001" className="rounded-lg" />
+        <Form layout="vertical" form={form} onFinish={handleAddSubmit} style={{ marginTop: 16 }}>
+          <div style={{ display: 'flex', gap: 14 }}>
+            <Form.Item name="code" label="Item Code" style={{ width: '35%' }} rules={[{ required: true, message: 'Required!' }]}>
+              <Input placeholder="ITM-001" />
             </Form.Item>
-            <Form.Item name="name" label="Item Name" className="w-2/3" rules={[{ required: true, message: 'Required!' }]}>
-              <Input placeholder="e.g. Logitech Mouse" className="rounded-lg" />
+            <Form.Item name="name" label="Item Name" style={{ flex: 1 }} rules={[{ required: true, message: 'Required!' }]}>
+              <Input placeholder="e.g. Logitech Mouse" />
             </Form.Item>
-
-
           </div>
-          
-
-
-          <div className="flex gap-4">
-
-
-            <Form.Item name="quantity" label="Initial Quantity" className="w-1/2" rules={[{ required: true, message: 'Required!' }]}>
-              <InputNumber className="w-full rounded-lg" min={1} />
+          <div style={{ display: 'flex', gap: 14 }}>
+            <Form.Item name="quantity" label="Initial Quantity" style={{ width: '50%' }} rules={[{ required: true, message: 'Required!' }]}>
+              <InputNumber style={{ width: '100%' }} min={1} />
             </Form.Item>
-            <Form.Item name="status" label="Status" className="w-1/2" initialValue="In-Store" rules={[{ required: true }]}>
-              <Select className="rounded-lg" options={[
+            <Form.Item name="status" label="Status" style={{ flex: 1 }} initialValue="In-Store" rules={[{ required: true }]}>
+              <Select options={[
                 { value: 'In-Store', label: 'In-Store' },
                 { value: 'Damaged', label: 'Damaged' },
               ]} />
-
-
             </Form.Item>
-
           </div>
-
-   
-  
           <Form.Item name="place_id" label="Storage Place" rules={[{ required: true, message: 'Please select a place!' }]}>
-             <Select 
-               placeholder="Select where to store this item" 
-               className="rounded-lg"
-               options={places.map(p => ({
-                 value: p.id,
-                 label: `[PLC-${p.id}] ${p.name} (Cupboard: ${p.cupboard_id})`
-               }))}
-             />
+            <Select
+              placeholder="Select where to store this item"
+              options={places.map(p => ({
+                value: p.id,
+                label: `[PLC-${p.id}] ${p.name} (Cupboard: ${p.cupboard_id})`,
+              }))}
+            />
           </Form.Item>
-
-          <Form.Item name="description" label="Description">
-             <Input.TextArea placeholder="Optional description or specs..." rows={3} className="rounded-lg" />
+          <Form.Item name="description" label="Description (Optional)">
+            <Input.TextArea placeholder="Optional description or specs..." rows={3} />
           </Form.Item>
-
-          <div className="flex justify-end gap-2 mt-6">
-            <Button onClick={() => setIsModalOpen(false)} className="rounded-lg">Cancel</Button>
-            <Button type="primary" htmlType="submit" loading={submitLoading} className="bg-blue-600 rounded-lg">Save Item</Button>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
+            <Button onClick={() => setIsModalOpen(false)}>Cancel</Button>
+            <Button type="primary" htmlType="submit" loading={submitLoading} className="btn-gradient">
+              Save Item
+            </Button>
           </div>
         </Form>
       </Modal>
-
     </AdminLayout>
   );
 }

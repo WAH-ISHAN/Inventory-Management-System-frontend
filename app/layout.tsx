@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Toaster } from "react-hot-toast"; // <--- Toaster එක Import කරා
+import { Toaster } from "react-hot-toast"; 
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ceyntics Inventory",
+  title: "Inventory Management System",
   description: "Internal Inventory Management System",
 };
 
@@ -40,10 +40,10 @@ export default function RootLayout({
               borderRadius: '8px',
             },
             success: {
-              iconTheme: { primary: '#10b981', secondary: '#fff' }, // Emerald green
+              iconTheme: { primary: '#10b981', secondary: '#fff' }, 
             },
             error: {
-              iconTheme: { primary: '#ef4444', secondary: '#fff' }, // Red
+              iconTheme: { primary: '#ef4444', secondary: '#fff' }, 
             },
           }} 
         />
