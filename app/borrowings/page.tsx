@@ -60,8 +60,12 @@ export default function BorrowingsPage() {
       setIsBorrowModalOpen(false);
       borrowForm.resetFields();
       fetchData();
-    } catch {
-      toast.error('Failed to borrow item. Please try again.');
+    } catch (error: any) {
+      if (error.response?.data?.errors) {
+        toast.error(Object.values(error.response.data.errors).flat().join(', '));
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to borrow item. Please try again.');
+      }
     } finally {
       setSubmitLoading(false);
     }

@@ -55,7 +55,15 @@ export default function UsersPage() {
       }
       closeModal();
       fetchUsers();
-    } catch { console.error('Failed to save user'); }
+    } catch (error: any) { 
+      if (error.response?.data?.errors) {
+        const errorMessages = Object.values(error.response.data.errors).flat().join(', ');
+        toast.error(errorMessages);
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to save user');
+      }
+      console.error(error);
+    }
     finally { setSubmitLoading(false); }
   };
 
@@ -300,7 +308,7 @@ export default function UsersPage() {
               <Form.Item name="email" label="Email Address" rules={[{ required: true, type: 'email', message: 'Valid email required!' }]}>
                 <Input placeholder="user@company.com" />
               </Form.Item>
-              <Form.Item name="password" label="Temporary Password" rules={[{ required: true, min: 6, message: 'Minimum 6 characters required!' }]}>
+              <Form.Item name="password" label="Temporary Password" rules={[{ required: true, min: 8, message: 'Minimum 8 characters required!' }]}>
                 <Input.Password placeholder="Set a strong password" />
               </Form.Item>
             </>
