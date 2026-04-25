@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState ,useEffect } from 'react';
 import { Typography, Button, Table, Tabs, Input, Space, Modal, Form, Popconfirm, Tag } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, InboxOutlined, AppstoreOutlined } from '@ant-design/icons';
 import AdminLayout from '../components/AdminLayout'; 
@@ -26,7 +26,7 @@ export default function StoragePage() {
     fetchPlaces();
   }, []);
 
-  const fetchCupboards = async () => {
+  async function fetchCupboards() {
     try {
       setLoadingCupboards(true);
       const res = await api.get('/cupboards');
@@ -37,9 +37,9 @@ export default function StoragePage() {
     } finally {
       setLoadingCupboards(false);
     }
-  };
+  }
 
-  const fetchPlaces = async () => {
+  async function fetchPlaces() {
     try {
       setLoadingPlaces(true);
       const res = await api.get('/places');
@@ -50,7 +50,7 @@ export default function StoragePage() {
     } finally {
       setLoadingPlaces(false);
     }
-  };
+  }
 
   const handleAddCupboard = async (values: any) => {
     setSubmitLoading(true);

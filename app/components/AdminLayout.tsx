@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Layout, Menu, Typography, Button, theme } from 'antd';
 import {
   DashboardOutlined,
@@ -10,6 +10,9 @@ import {
   UserOutlined,
   HistoryOutlined,
   LogoutOutlined
+
+
+
 } from '@ant-design/icons';
 import Link from 'next/link'; 
 import { usePathname, useRouter } from 'next/navigation';
@@ -25,12 +28,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
 
+const [userRole, setUserRole] = useState<string>('');
+  useEffect(() => {
+    const role = Cookies.get('role');
+    setUserRole(role?.toLowerCase() || 'staff');
+  }, []);
 
-  const handleLogout = () => {
+
+const handleLogout = () => {
     Cookies.remove('token'); 
+    Cookies.remove('role'); 
     toast.success('Logged out successfully!');
     router.push('/login'); 
   };
+
+
 
 
   const menuItems = [
@@ -41,6 +53,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { key: '/users', icon: <UserOutlined />, label: <Link href="/users">User Management</Link> },
     { key: '/audit-logs', icon: <HistoryOutlined />, label: <Link href="/audit-logs">Audit Logs</Link> },
   ];
+
+  if (userRole === 'admin') {
+    menuItems.push(
+      { key: '/users', icon: <UserOutlined />, label: <Link href="/users">User Management</Link> },
+      { key: '/audit-logs', icon: <HistoryOutlined />, label: <Link href="/audit-logs">Audit Logs</Link> }
+    );
+  }
 
   return (
     <Layout style={{ minHeight: '100vh' }}>

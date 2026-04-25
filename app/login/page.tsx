@@ -29,9 +29,15 @@ export default function LoginPage() {
       const res = await api.post('/login',values);
       if(res.data.token){
         Cookies.set('token', res.data.token, { expires: 7 });
+
+        const userRole = res.data.user?.role || 'Admin'; 
+        Cookies.set('role', userRole, { expires: 7 });
+
+        
         toast.success('Login successful! Redirecting...');
         router.push('/dashboard');
       }
+      
 
     }catch(err){
       console.error("Login failed:", err);
