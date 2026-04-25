@@ -79,7 +79,7 @@ export default function UsersPage() {
     const matchesSearch =
       user.name?.toLowerCase().includes(searchText.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchText.toLowerCase());
-    const matchesRole = filterRole === 'All' || user.role === filterRole;
+    const matchesRole = filterRole === 'All' || user.role?.toLowerCase() === filterRole.toLowerCase();
     return matchesSearch && matchesRole;
   });
 
@@ -305,10 +305,10 @@ export default function UsersPage() {
               </Form.Item>
             </>
           )}
-          <Form.Item name="role" label="System Role" initialValue="Staff" rules={[{ required: true }]}>
+          <Form.Item name="role" label="System Role" initialValue="staff" rules={[{ required: true }]}>
             <Select options={[
-              { value: 'Admin', label: '🛡 Administrator (Full Access)' },
-              { value: 'Staff', label: '👤 Staff (Limited Access)' },
+              { value: 'admin', label: '🛡 Administrator (Full Access)' },
+              { value: 'staff', label: '👤 Staff (Limited Access)' },
             ]} />
           </Form.Item>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
