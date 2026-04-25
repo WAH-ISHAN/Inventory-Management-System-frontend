@@ -96,6 +96,12 @@ export default function InventoryPage() {
       ),
     },
     {
+      title: 'Serial Number',
+      dataIndex: 'serial_number',
+      key: 'serial_number',
+      render: (text: string) => text ? <span style={{ color: '#94a3b8', fontSize: 13 }}>{text}</span> : <span style={{ color: '#475569', fontStyle: 'italic', fontSize: 12 }}>N/A</span>,
+    },
+    {
       title: 'Item Name',
       dataIndex: 'name',
       key: 'name',
@@ -344,8 +350,22 @@ export default function InventoryPage() {
             </Form.Item>
           </div>
           <div style={{ display: 'flex', gap: 14 }}>
-            <Form.Item name="quantity" label="Initial Quantity" style={{ width: '50%' }} rules={[{ required: true, message: 'Required!' }]}>
+            <Form.Item name="serial_number" label="Serial Number (Optional)" style={{ width: '50%' }}>
+              <Input placeholder="e.g. SN-987654321" />
+            </Form.Item>
+            <Form.Item name="quantity" label="Initial Quantity" style={{ flex: 1 }} rules={[{ required: true, message: 'Required!' }]}>
               <InputNumber style={{ width: '100%' }} min={1} />
+            </Form.Item>
+          </div>
+          <div style={{ display: 'flex', gap: 14 }}>
+            <Form.Item name="place_id" label="Storage Place" style={{ width: '50%' }} rules={[{ required: true, message: 'Please select a place!' }]}>
+              <Select
+                placeholder="Select where to store this item"
+                options={places.map(p => ({
+                  value: p.id,
+                  label: `[PLC-${p.id}] ${p.name}`,
+                }))}
+              />
             </Form.Item>
             <Form.Item name="status" label="Status" style={{ flex: 1 }} initialValue="In-Store" rules={[{ required: true }]}>
               <Select options={[
@@ -354,15 +374,6 @@ export default function InventoryPage() {
               ]} />
             </Form.Item>
           </div>
-          <Form.Item name="place_id" label="Storage Place" rules={[{ required: true, message: 'Please select a place!' }]}>
-            <Select
-              placeholder="Select where to store this item"
-              options={places.map(p => ({
-                value: p.id,
-                label: `[PLC-${p.id}] ${p.name} (Cupboard: ${p.cupboard_id})`,
-              }))}
-            />
-          </Form.Item>
           <Form.Item name="description" label="Description (Optional)">
             <Input.TextArea placeholder="Optional description or specs..." rows={3} />
           </Form.Item>
