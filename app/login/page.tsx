@@ -34,6 +34,7 @@ export default function LoginPage() {
       }
 
     }catch(err){
+      console.error("Login failed:", err);
       toast.error('Login failed. Please check your credentials and try again.');
     }
     finally{
@@ -44,10 +45,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex w-full bg-gray-50">
-      
-      {/* Left Side - Branding / Graphic Area (Hidden on Mobile) */}
       <div className="hidden lg:flex w-1/2 bg-slate-900 flex-col justify-between p-12 relative overflow-hidden">
-        {/* Abstract Background Design Elements */}
         <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-teal-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
 
@@ -72,8 +70,6 @@ export default function LoginPage() {
           <span>Secured by Enterprise Grade Authentication</span>
         </div>
       </div>
-
-      {/* Right Side - Login Form Area */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12">
         <div className="w-full max-w-md bg-white p-10 rounded-2xl shadow-xl border border-gray-100">
           
@@ -144,7 +140,7 @@ export default function LoginPage() {
 
           <div className="text-center">
             <Text type="secondary" className="text-xs">
-              ⚠️ No public registration. If you need an account, please contact the System Administrator.
+              No public registration. If you need an account, please contact the System Administrator.
             </Text>
           </div>
 
