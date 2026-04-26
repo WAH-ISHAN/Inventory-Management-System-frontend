@@ -23,7 +23,11 @@ export default function AuditLogsPage() {
     setLoading(true);
     try {
       const response = await api.get('/audit-logs');
-      const sortedLogs = response.data.sort(
+      const logsList = Array.isArray(response.data)
+        ? response.data
+        : (Array.isArray(response.data?.data) ? response.data.data : []);
+
+      const sortedLogs = logsList.sort(
         (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
       setLogs(sortedLogs);
@@ -43,13 +47,19 @@ export default function AuditLogsPage() {
       const timer = setTimeout(() => void fetchLogs(), 0);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [router]);
 
   const filteredLogs = logs.filter(log => {
+    const query = searchText.trim().toLowerCase();
     const matchesSearch =
-      log.description?.toLowerCase().includes(searchText.toLowerCase()) ||
-      log.user_email?.toLowerCase().includes(searchText.toLowerCase());
-    const matchesAction = filterAction === 'All' || log.action === filterAction;
+      query.length === 0 ||
+      [log.description, log.user_email, log.action, log.model]
+        .some((value) => String(value ?? '').toLowerCase().includes(query));
+
+    const matchesAction =
+      filterAction === 'All' ||
+      String(log.action ?? '').toLowerCase().includes(filterAction.toLowerCase());
+
     return matchesSearch && matchesAction;
   });
 
@@ -191,12 +201,12 @@ export default function AuditLogsPage() {
           style={{ width: 180, height: 38 }}
           options={[
             { value: 'All', label: 'All Actions' },
-            { value: 'CREATE', label: '✦ Created' },
-            { value: 'UPDATE', label: '✎ Updated' },
-            { value: 'DELETE', label: '✕ Deleted' },
-            { value: 'BORROW', label: '↗ Borrowed' },
-            { value: 'RETURN', label: '↩ Returned' },
-            { value: 'LOGIN', label: '⊙ Logins' },
+            { value: 'create', label: '✦ Created' },
+            { value: 'update', label: '✎ Updated' },
+            { value: 'delete', label: '✕ Deleted' },
+            { value: 'borrow', label: '↗ Borrowed' },
+            { value: 'return', label: '↩ Returned' },
+            { value: 'login', label: '⊙ Logins' },
           ]}
         />
         <span style={{ marginLeft: 'auto', fontSize: 12, color: '#475569', fontWeight: 500 }}>
