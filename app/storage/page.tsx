@@ -10,12 +10,6 @@ import AdminLayout from '../components/AdminLayout';
 import toast from 'react-hot-toast';
 import api from '../lib/axios';
 
-const normalizeList = (payload: any): any[] => {
-  if (Array.isArray(payload)) return payload;
-  if (Array.isArray(payload?.data)) return payload.data;
-  return [];
-};
-
 export default function StoragePage() {
   const [activeTab, setActiveTab] = useState<'cupboards' | 'places'>('cupboards');
   const [cupboards, setCupboards] = useState<any[]>([]);
@@ -29,15 +23,29 @@ export default function StoragePage() {
   const [placeForm] = Form.useForm();
 
   const fetchCupboards = useCallback(async () => {
-    try { setLoadingCupboards(true); await api.get('/cupboards').then(res => setCupboards(normalizeList(res.data))); }
-    catch { toast.error('Failed to fetch cupboards'); }
-    finally { setLoadingCupboards(false); }
+    try {
+      setLoadingCupboards(true);
+      const res = await api.get('/cupboards');
+      setCupboards(Array.isArray(res.data) ? res.data : (res.data?.data || []));
+    } catch (error) {
+      toast.error('Failed to fetch cupboards');
+      console.error('Failed to fetch cupboards', error);
+    } finally {
+      setLoadingCupboards(false);
+    }
   }, []);
 
   const fetchPlaces = useCallback(async () => {
-    try { setLoadingPlaces(true); await api.get('/places').then(res => setPlaces(normalizeList(res.data))); }
-    catch { toast.error('Failed to fetch places'); }
-    finally { setLoadingPlaces(false); }
+    try {
+      setLoadingPlaces(true);
+      const res = await api.get('/places');
+      setPlaces(Array.isArray(res.data) ? res.data : (res.data?.data || []));
+    } catch (error) {
+      toast.error('Failed to fetch places');
+      console.error('Failed to fetch places', error);
+    } finally {
+      setLoadingPlaces(false);
+    }
   }, []);
 
   useEffect(() => {
