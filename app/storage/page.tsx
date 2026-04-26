@@ -12,8 +12,8 @@ import api from '../lib/axios';
 
 export default function StoragePage() {
   const [activeTab, setActiveTab] = useState<'cupboards' | 'places'>('cupboards');
-  const [cupboards, setCupboards] = useState([]);
-  const [places, setPlaces] = useState([]);
+  const [cupboards, setCupboards] = useState<any[]>([]);
+  const [places, setPlaces] = useState<any[]>([]);
   const [loadingCupboards, setLoadingCupboards] = useState(true);
   const [loadingPlaces, setLoadingPlaces] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -22,16 +22,22 @@ export default function StoragePage() {
   const [cupboardForm] = Form.useForm();
   const [placeForm] = Form.useForm();
 
+  const normalizeList = (payload: any): any[] => {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.data)) return payload.data;
+    return [];
+  };
+
   useEffect(() => { fetchCupboards(); fetchPlaces(); }, []);
 
   async function fetchCupboards() {
-    try { setLoadingCupboards(true); await api.get('/cupboards').then(res => setCupboards(res.data)); }
+    try { setLoadingCupboards(true); await api.get('/cupboards').then(res => setCupboards(normalizeList(res.data))); }
     catch { toast.error('Failed to fetch cupboards'); }
     finally { setLoadingCupboards(false); }
   }
 
   async function fetchPlaces() {
-    try { setLoadingPlaces(true); await api.get('/places').then(res => setPlaces(res.data)); }
+    try { setLoadingPlaces(true); await api.get('/places').then(res => setPlaces(normalizeList(res.data))); }
     catch { toast.error('Failed to fetch places'); }
     finally { setLoadingPlaces(false); }
   }

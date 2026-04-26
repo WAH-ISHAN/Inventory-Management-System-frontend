@@ -22,12 +22,18 @@ export default function InventoryPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
 
+  const normalizeList = (payload: any): any[] => {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.data)) return payload.data;
+    return [];
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
       const [itemsRes, placesRes] = await Promise.all([api.get('/items'), api.get('/places')]);
-      setItems(itemsRes.data);
-      setPlaces(placesRes.data);
+      setItems(normalizeList(itemsRes.data));
+      setPlaces(normalizeList(placesRes.data));
     } catch {
       toast.error('Failed to load inventory data');
     } finally {
@@ -361,9 +367,9 @@ export default function InventoryPage() {
             <Form.Item name="place_id" label="Storage Place" style={{ width: '50%' }} rules={[{ required: true, message: 'Please select a place!' }]}>
               <Select
                 placeholder="Select where to store this item"
-                options={places.map(p => ({
+                options={(places || []).map((p: any) => ({
                   value: p.id,
-                  label: `[PLC-${p.id}] ${p.name}`,
+                  label: `[PLC-${p.id}] ${p.name} (Cupboard: ${p.cupboard_id})`,
                 }))}
               />
             </Form.Item>

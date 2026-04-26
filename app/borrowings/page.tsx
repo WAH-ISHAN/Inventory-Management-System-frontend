@@ -25,12 +25,20 @@ export default function BorrowingsPage() {
   const [borrowForm] = Form.useForm();
   const [returnForm] = Form.useForm();
 
+  const normalizeList = (payload: any): any[] => {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.data)) return payload.data;
+    return [];
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
       const [borrowRes, itemsRes] = await Promise.all([api.get('/borrowings'), api.get('/items')]);
-      setBorrowings(borrowRes.data);
-      setAvailableItems(itemsRes.data.filter((item: any) => item.status === 'In-Store'));
+      const borrowingsList = normalizeList(borrowRes.data);
+      const itemsList = normalizeList(itemsRes.data);
+      setBorrowings(borrowingsList);
+      setAvailableItems(itemsList.filter((item: any) => item.status === 'In-Store'));
     } catch {
       toast.error('Failed to load data. Please try again.');
     } finally {
