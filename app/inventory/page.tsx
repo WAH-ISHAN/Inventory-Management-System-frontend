@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { Button, Table, Tag, Input, Modal, Form, Select, InputNumber, Popconfirm } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Button, Table, Input, Modal, Form, Select, InputNumber, Popconfirm } from 'antd';
 import {
   PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined,
   AppstoreOutlined, FilterOutlined, ReloadOutlined,
@@ -11,6 +11,12 @@ import toast from 'react-hot-toast';
 import api from '../lib/axios';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
+const normalizeList = (payload: any): any[] => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  return [];
+};
 
 export default function InventoryPage() {
   const [items, setItems] = useState<any[]>([]);
@@ -22,13 +28,7 @@ export default function InventoryPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
 
-  const normalizeList = (payload: any): any[] => {
-    if (Array.isArray(payload)) return payload;
-    if (Array.isArray(payload?.data)) return payload.data;
-    return [];
-  };
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const [itemsRes, placesRes] = await Promise.all([api.get('/items'), api.get('/places')]);
@@ -39,9 +39,12 @@ export default function InventoryPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    const timer = setTimeout(() => void fetchData(), 0);
+    return () => clearTimeout(timer);
+  }, [fetchData]);
 
   const handleAddSubmit = async (values: any) => {
     setSubmitLoading(true);
@@ -192,6 +195,8 @@ export default function InventoryPage() {
       render: (_: any, record: any) => (
         <div style={{ display: 'flex', gap: 6 }}>
           <button
+            title="Edit item"
+            aria-label="Edit item"
             style={{
               background: 'rgba(99,102,241,0.1)',
               border: '1px solid rgba(99,102,241,0.2)',
@@ -213,6 +218,8 @@ export default function InventoryPage() {
             okButtonProps={{ danger: true }}
           >
             <button
+              title="Delete item"
+              aria-label="Delete item"
               style={{
                 background: 'rgba(244,63,94,0.1)',
                 border: '1px solid rgba(244,63,94,0.2)',

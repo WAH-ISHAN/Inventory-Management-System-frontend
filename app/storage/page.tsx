@@ -1,14 +1,20 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Table, Input, Modal, Form, Select, Popconfirm } from 'antd';
 import {
-  PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined,
-  DatabaseOutlined, AppstoreOutlined, InboxOutlined, FilterOutlined,
+  PlusOutlined, EditOutlined, DeleteOutlined,
+  DatabaseOutlined, AppstoreOutlined, InboxOutlined,
 } from '@ant-design/icons';
 import AdminLayout from '../components/AdminLayout';
 import toast from 'react-hot-toast';
 import api from '../lib/axios';
+
+const normalizeList = (payload: any): any[] => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  return [];
+};
 
 export default function StoragePage() {
   const [activeTab, setActiveTab] = useState<'cupboards' | 'places'>('cupboards');
@@ -22,25 +28,26 @@ export default function StoragePage() {
   const [cupboardForm] = Form.useForm();
   const [placeForm] = Form.useForm();
 
-  const normalizeList = (payload: any): any[] => {
-    if (Array.isArray(payload)) return payload;
-    if (Array.isArray(payload?.data)) return payload.data;
-    return [];
-  };
-
-  useEffect(() => { fetchCupboards(); fetchPlaces(); }, []);
-
-  async function fetchCupboards() {
+  const fetchCupboards = useCallback(async () => {
     try { setLoadingCupboards(true); await api.get('/cupboards').then(res => setCupboards(normalizeList(res.data))); }
     catch { toast.error('Failed to fetch cupboards'); }
     finally { setLoadingCupboards(false); }
-  }
+  }, []);
 
-  async function fetchPlaces() {
+  const fetchPlaces = useCallback(async () => {
     try { setLoadingPlaces(true); await api.get('/places').then(res => setPlaces(normalizeList(res.data))); }
     catch { toast.error('Failed to fetch places'); }
     finally { setLoadingPlaces(false); }
-  }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void fetchCupboards();
+      void fetchPlaces();
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [fetchCupboards, fetchPlaces]);
 
   const handleAddCupboard = async (values: any) => {
     setSubmitLoading(true);
@@ -104,12 +111,12 @@ export default function StoragePage() {
       key: 'action',
       render: (_: any, record: any) => (
         <div style={{ display: 'flex', gap: 6 }}>
-          <button style={{
+          <button title="Edit cupboard" aria-label="Edit cupboard" style={{
             background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)',
             borderRadius: 8, padding: '6px 10px', color: '#a5b4fc', cursor: 'pointer',
           }}><EditOutlined /></button>
           <Popconfirm title="Delete this cupboard?" description="Are you sure?" onConfirm={() => handleDelete('cupboard', record.id)} okText="Delete" cancelText="Cancel">
-            <button style={{
+            <button title="Delete cupboard" aria-label="Delete cupboard" style={{
               background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.2)',
               borderRadius: 8, padding: '6px 10px', color: '#f87171', cursor: 'pointer',
             }}><DeleteOutlined /></button>
@@ -161,12 +168,12 @@ export default function StoragePage() {
       key: 'action',
       render: (_: any, record: any) => (
         <div style={{ display: 'flex', gap: 6 }}>
-          <button style={{
+          <button title="Edit place" aria-label="Edit place" style={{
             background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)',
             borderRadius: 8, padding: '6px 10px', color: '#a5b4fc', cursor: 'pointer',
           }}><EditOutlined /></button>
           <Popconfirm title="Delete this place?" description="Are you sure?" onConfirm={() => handleDelete('place', record.id)} okText="Delete" cancelText="Cancel">
-            <button style={{
+            <button title="Delete place" aria-label="Delete place" style={{
               background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.2)',
               borderRadius: 8, padding: '6px 10px', color: '#f87171', cursor: 'pointer',
             }}><DeleteOutlined /></button>
