@@ -39,7 +39,19 @@ export default function StoragePage() {
     try {
       setLoadingPlaces(true);
       const res = await api.get('/places');
-      setPlaces(Array.isArray(res.data) ? res.data : (res.data?.data || []));
+
+      console.log('🔥 PLACES DATA FROM BACKEND:', res.data);
+
+      let placesArray: any[] = [];
+      if (Array.isArray(res.data)) {
+        placesArray = res.data;
+      } else if (Array.isArray(res.data?.data)) {
+        placesArray = res.data.data;
+      } else if (Array.isArray(res.data?.places)) {
+        placesArray = res.data.places;
+      }
+
+      setPlaces(placesArray);
     } catch (error) {
       toast.error('Failed to fetch places');
       console.error('Failed to fetch places', error);
