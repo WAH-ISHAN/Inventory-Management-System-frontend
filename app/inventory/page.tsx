@@ -26,6 +26,7 @@ export default function InventoryPage() {
   const [searchText, setSearchText] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
   const [form] = Form.useForm();
 
   const fetchData = useCallback(async () => {
@@ -46,16 +47,22 @@ export default function InventoryPage() {
     return () => clearTimeout(timer);
   }, [fetchData]);
 
-  const handleAddSubmit = async (values: any) => {
+  const handleSubmit = async (values: any) => {
     setSubmitLoading(true);
     try {
-      await api.post('/items', values);
-      toast.success('Item added successfully!');
+      if (editingItem) {
+        await api.put(`/items/${editingItem.id}`, values);
+        toast.success('Item updated successfully!');
+      } else {
+        await api.post('/items', values);
+        toast.success('Item added successfully!');
+      }
       setIsModalOpen(false);
+      setEditingItem(null);
       form.resetFields();
       fetchData();
     } catch {
-      toast.error('Failed to add item');
+      toast.error(editingItem ? 'Failed to update item' : 'Failed to add item');
     } finally {
       setSubmitLoading(false);
     }
@@ -69,6 +76,21 @@ export default function InventoryPage() {
     } catch {
       toast.error('Failed to delete item');
     }
+  };
+
+  const openAddModal = () => {
+    setEditingItem(null);
+    form.resetFields();
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (record: any) => {
+    setEditingItem(record);
+    form.setFieldsValue({
+      ...record,
+      place_id: record.place_id,
+    });
+    setIsModalOpen(true);
   };
 
   const filteredItems = items.filter(item => {
@@ -197,6 +219,7 @@ export default function InventoryPage() {
           <button
             title="Edit item"
             aria-label="Edit item"
+            onClick={() => openEditModal(record)}
             style={{
               background: 'rgba(99,102,241,0.1)',
               border: '1px solid rgba(99,102,241,0.2)',
@@ -282,7 +305,7 @@ export default function InventoryPage() {
             icon={<PlusOutlined />}
             size="large"
             className="btn-gradient"
-            onClick={() => setIsModalOpen(true)}
+            onClick={openAddModal}
             style={{ borderRadius: 10, height: 40, fontWeight: 700 }}
           >
             Add New Item
@@ -342,9 +365,11 @@ export default function InventoryPage() {
               background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <PlusOutlined style={{ color: 'white', fontSize: 14 }} />
+              {editingItem ? <EditOutlined style={{ color: 'white', fontSize: 14 }} /> : <PlusOutlined style={{ color: 'white', fontSize: 14 }} />}
             </div>
-            <span style={{ fontWeight: 700, fontSize: 16, color: '#f1f5f9' }}>Add New Item</span>
+            <span style={{ fontWeight: 700, fontSize: 16, color: '#f1f5f9' }}>
+              {editingItem ? 'Edit Item Details' : 'Add New Item'}
+            </span>
           </div>
         }
         open={isModalOpen}
@@ -353,7 +378,7 @@ export default function InventoryPage() {
         destroyOnHidden
         width={560}
       >
-        <Form layout="vertical" form={form} onFinish={handleAddSubmit} style={{ marginTop: 16 }}>
+        <Form layout="vertical" form={form} onFinish={handleSubmit} style={{ marginTop: 16 }}>
           <div style={{ display: 'flex', gap: 14 }}>
             <Form.Item name="code" label="Item Code" style={{ width: '35%' }} rules={[{ required: true, message: 'Required!' }]}>
               <Input placeholder="ITM-001" />
@@ -393,7 +418,7 @@ export default function InventoryPage() {
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
             <Button onClick={() => setIsModalOpen(false)}>Cancel</Button>
             <Button type="primary" htmlType="submit" loading={submitLoading} className="btn-gradient">
-              Save Item
+              {editingItem ? 'Save Changes' : 'Save Item'}
             </Button>
           </div>
         </Form>

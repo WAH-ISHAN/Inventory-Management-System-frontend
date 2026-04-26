@@ -19,6 +19,8 @@ export default function StoragePage() {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [isCupboardModalOpen, setIsCupboardModalOpen] = useState(false);
   const [isPlaceModalOpen, setIsPlaceModalOpen] = useState(false);
+  const [editingCupboard, setEditingCupboard] = useState<any>(null);
+  const [editingPlace, setEditingPlace] = useState<any>(null);
   const [cupboardForm] = Form.useForm();
   const [placeForm] = Form.useForm();
 
@@ -72,24 +74,36 @@ export default function StoragePage() {
   const handleAddCupboard = async (values: any) => {
     setSubmitLoading(true);
     try {
-      await api.post('/cupboards', values);
-      toast.success('Cupboard added!');
+      if (editingCupboard) {
+        await api.put(`/cupboards/${editingCupboard.id}`, values);
+        toast.success('Cupboard updated!');
+      } else {
+        await api.post('/cupboards', values);
+        toast.success('Cupboard added!');
+      }
       setIsCupboardModalOpen(false);
+      setEditingCupboard(null);
       cupboardForm.resetFields();
       fetchCupboards();
-    } catch { toast.error('Failed to add cupboard'); }
+    } catch { toast.error(editingCupboard ? 'Failed to update cupboard' : 'Failed to add cupboard'); }
     finally { setSubmitLoading(false); }
   };
 
   const handleAddPlace = async (values: any) => {
     setSubmitLoading(true);
     try {
-      await api.post('/places', values);
-      toast.success('Place added!');
+      if (editingPlace) {
+        await api.put(`/places/${editingPlace.id}`, values);
+        toast.success('Place updated!');
+      } else {
+        await api.post('/places', values);
+        toast.success('Place added!');
+      }
       setIsPlaceModalOpen(false);
+      setEditingPlace(null);
       placeForm.resetFields();
       fetchPlaces();
-    } catch { toast.error('Failed to add place'); }
+    } catch { toast.error(editingPlace ? 'Failed to update place' : 'Failed to add place'); }
     finally { setSubmitLoading(false); }
   };
 
@@ -99,6 +113,30 @@ export default function StoragePage() {
       else { await api.delete(`/places/${id}`); fetchPlaces(); }
       toast.success(`${type} deleted!`);
     } catch { toast.error(`Failed to delete ${type}`); }
+  };
+
+  const openAddCupboardModal = () => {
+    setEditingCupboard(null);
+    cupboardForm.resetFields();
+    setIsCupboardModalOpen(true);
+  };
+
+  const openEditCupboardModal = (record: any) => {
+    setEditingCupboard(record);
+    cupboardForm.setFieldsValue(record);
+    setIsCupboardModalOpen(true);
+  };
+
+  const openAddPlaceModal = () => {
+    setEditingPlace(null);
+    placeForm.resetFields();
+    setIsPlaceModalOpen(true);
+  };
+
+  const openEditPlaceModal = (record: any) => {
+    setEditingPlace(record);
+    placeForm.setFieldsValue(record);
+    setIsPlaceModalOpen(true);
   };
 
   const cupboardColumns = [
@@ -131,7 +169,7 @@ export default function StoragePage() {
       key: 'action',
       render: (_: any, record: any) => (
         <div style={{ display: 'flex', gap: 6 }}>
-          <button title="Edit cupboard" aria-label="Edit cupboard" style={{
+          <button title="Edit cupboard" aria-label="Edit cupboard" onClick={() => openEditCupboardModal(record)} style={{
             background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)',
             borderRadius: 8, padding: '6px 10px', color: '#a5b4fc', cursor: 'pointer',
           }}><EditOutlined /></button>
@@ -188,7 +226,7 @@ export default function StoragePage() {
       key: 'action',
       render: (_: any, record: any) => (
         <div style={{ display: 'flex', gap: 6 }}>
-          <button title="Edit place" aria-label="Edit place" style={{
+          <button title="Edit place" aria-label="Edit place" onClick={() => openEditPlaceModal(record)} style={{
             background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)',
             borderRadius: 8, padding: '6px 10px', color: '#a5b4fc', cursor: 'pointer',
           }}><EditOutlined /></button>
@@ -226,14 +264,14 @@ export default function StoragePage() {
           </div>
         </div>
         {activeTab === 'cupboards' ? (
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsCupboardModalOpen(true)} style={{
+          <Button type="primary" icon={<PlusOutlined />} onClick={openAddCupboardModal} style={{
             background: 'linear-gradient(135deg, #f59e0b, #d97706)', border: 'none',
             borderRadius: 10, height: 40, fontWeight: 700, boxShadow: '0 4px 12px rgba(245,158,11,0.4)',
           }}>
             Add Cupboard
           </Button>
         ) : (
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsPlaceModalOpen(true)} style={{
+          <Button type="primary" icon={<PlusOutlined />} onClick={openAddPlaceModal} style={{
             background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', border: 'none',
             borderRadius: 10, height: 40, fontWeight: 700, boxShadow: '0 4px 12px rgba(139,92,246,0.4)',
           }}>
@@ -291,9 +329,11 @@ export default function StoragePage() {
               background: 'linear-gradient(135deg, #f59e0b, #d97706)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <AppstoreOutlined style={{ color: 'white', fontSize: 14 }} />
+              {editingCupboard ? <EditOutlined style={{ color: 'white', fontSize: 14 }} /> : <AppstoreOutlined style={{ color: 'white', fontSize: 14 }} />}
             </div>
-            <span style={{ fontWeight: 700, fontSize: 16, color: '#f1f5f9' }}>Add New Cupboard</span>
+            <span style={{ fontWeight: 700, fontSize: 16, color: '#f1f5f9' }}>
+              {editingCupboard ? 'Edit Cupboard Details' : 'Add New Cupboard'}
+            </span>
           </div>
         }
         open={isCupboardModalOpen}
@@ -313,7 +353,7 @@ export default function StoragePage() {
             <Button onClick={() => setIsCupboardModalOpen(false)}>Cancel</Button>
             <Button type="primary" htmlType="submit" loading={submitLoading} style={{
               background: 'linear-gradient(135deg, #f59e0b, #d97706)', border: 'none', fontWeight: 700,
-            }}>Save Cupboard</Button>
+            }}>{editingCupboard ? 'Save Changes' : 'Save Cupboard'}</Button>
           </div>
         </Form>
       </Modal>
@@ -327,9 +367,11 @@ export default function StoragePage() {
               background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <InboxOutlined style={{ color: 'white', fontSize: 14 }} />
+              {editingPlace ? <EditOutlined style={{ color: 'white', fontSize: 14 }} /> : <InboxOutlined style={{ color: 'white', fontSize: 14 }} />}
             </div>
-            <span style={{ fontWeight: 700, fontSize: 16, color: '#f1f5f9' }}>Add Storage Place</span>
+            <span style={{ fontWeight: 700, fontSize: 16, color: '#f1f5f9' }}>
+              {editingPlace ? 'Edit Storage Place' : 'Add Storage Place'}
+            </span>
           </div>
         }
         open={isPlaceModalOpen}
@@ -355,7 +397,7 @@ export default function StoragePage() {
             <Button onClick={() => setIsPlaceModalOpen(false)}>Cancel</Button>
             <Button type="primary" htmlType="submit" loading={submitLoading} style={{
               background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', border: 'none', fontWeight: 700,
-            }}>Save Place</Button>
+            }}>{editingPlace ? 'Save Changes' : 'Save Place'}</Button>
           </div>
         </Form>
       </Modal>

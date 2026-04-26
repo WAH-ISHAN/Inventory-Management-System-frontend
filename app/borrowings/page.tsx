@@ -249,6 +249,12 @@ export default function BorrowingsPage() {
         );
       },
     },
+    {
+      title: 'Notes',
+      dataIndex: 'notes',
+      key: 'notes',
+      render: (val: string) => <span style={{ color: '#64748b', fontSize: 12 }}>{val || '—'}</span>,
+    },
   ];
 
   return (
